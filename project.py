@@ -21,9 +21,8 @@ class Project(flow.FlowProject):
         current_path = pathlib.Path(os.getcwd()).absolute()
 
 # To run on a cluster, you may need to define a template for the scheduler
-# For example, below is what I would use on our local group cluster.
-# It is currently commented out as it won't be used in the simple
-# example here.
+# For example, below is what I would use on my local group cluster.
+# It is currently commented out as it won't be used in this example.
 """
 from flow.environment import DefaultTorqueEnvironment
 class Rahman(DefaultTorqueEnvironment):
@@ -43,6 +42,10 @@ class Rahman(DefaultTorqueEnvironment):
                             )
 
 """
+
+# This function will read in jinja template, replace variables, and write out the new file
+# This is not called directly in the signac project, but called by the init function
+# defined below.
 def _setup_mdp(fname, template, data, overwrite=False):
     """Create mdp files based on a template and provided data.
         Parameters
@@ -78,6 +81,12 @@ def _setup_mdp(fname, template, data, overwrite=False):
     return None
 
 
+# init function to set up the simulation
+# This will call mbuild to construct the system, foyer to atom-type,
+# save to the appropriate .top and .gro format,
+# and then generate the propopogate an .mdp file for GROMACS using
+# the thermodynamic variables defined in init.py
+# This operation is considered successful if we have generated the .top, .gro, and .mdp files.
 @Project.operation(f'init')
 @Project.post(lambda j: j.isfile("system_input.top"))
 @Project.post(lambda j: j.isfile("system_input.gro"))
@@ -88,28 +97,31 @@ def _setup_mdp(fname, template, data, overwrite=False):
 @flow.with_job
 def init_job(job):
 
-    #fetch the key information related to system structure parameterization
-    molecule_string = job.sp.molecule_string
+    # get the root directory so that we can read in the appropriate force field file later
+    # and fetch the appropriate .mdp templates
     project_root = Project().root_directory()
+
+    # fetch the key information related to system structure parameterization
+    molecule_string = job.sp.molecule_string
     box_length = job.sp.box_length
     n_molecules = job.sp.n_molecules
     
-    #use mbuild to constract a compound and fill a box
+    # use mbuild to constract a compound and fill a box
     compound = mb.load(molecule_string, smiles=True)
     box = mb.Box(lengths=[box_length, box_length, box_length])
     compound_system = mb.fill_box(compound, n_compounds=n_molecules, box=box)
     
-    #atomtype and save the input files to GROMACS format
+    # atomtype and save the input files to GROMACS format
     compound_system.save(f"system_input.top", forcefield_files=f"{project_root}/xml_files/oplsaa_alkanes.xml", overwrite=True)
     compound_system.save(f"system_input.gro", overwrite=True)
 
     
-    #fetch run time variables
+    # fetch run time variables that will be set in the .mdp file
     run_time = job.sp.run_time
     temperature = job.sp.temperature
     velocity_seed = job.sp.velocity_seed
     
-    #set up mdp files
+    # aggregate info into a simple dictionary
     mdp_abs_path = Project().root_directory() + '/engine_input/gromacs/mdp'
     mdp = {
         "fname": "system_input.mdp",
@@ -120,6 +132,7 @@ def init_job(job):
             "temperature": temperature,
         }
     }
+    # call the function that will read in template, perform replacement, and generate the .mdp file
     _setup_mdp(
                fname=mdp["fname"],
                template=mdp["template"],
@@ -127,21 +140,38 @@ def init_job(job):
                overwrite=True,
                )
 
-# This bit will define  the gmx grompp command and gmx mdrun command
-# by the flow.cmd decorator, the string in the return statement will be executed
+
+# This function defines the gmx grompp and gmx mdrun commands
+# used to pre-process and run the simulation, respectively.
+# By using the flow.cmd decorator, the string in the return statement will be executed
+# in the same way we would call it at the command line or in a shell script.
+# This avoids the need to import, e.g., os and use popen.
+
+# Note the grompp and mdrun calls could certainly be in a separate signac functions,
+# and could be desirable for some workflows.
+# One advantage to packaging in a single command is that it allows chaining together a sequence
+# of simulations, e.g., a simulation workflow with 3 distinct stages,
+# where each stage depends on the input from the prior stage.
+# This can be done by simply concatenating together the separate msg statements, before returning.
+# Although, caution should be taken when making a single really long string,
+# as it may overrun the shell can handle (e.g., getting an "Argument list too long" error)
+
 @Project.operation(f'run')
 @Project.post(lambda j: j.isfile(f"system.gro"))
 @flow.with_job
 @flow.cmd
 def run_job(job):
 
-    grompp = f"gmx grompp -f system_input.mdp -o system_input.tpr -c system_input.gro -p system_input.top --maxwarn 2"
+    grompp = "gmx grompp -f system_input.mdp -o system_input.tpr -c system_input.gro -p system_input.top --maxwarn 2"
     mdrun ="gmx mdrun -v -deffnm system -s system_input.tpr -cpi system.cpt -nt 16"
     
     msg = f"{grompp} && {mdrun}"
     print(msg)
     return(msg)
     
+# This is a simple function to check to see if the job has completed, writing to the job.doc.
+# This will be used in the analysis.py file to ensure that we are only performing analysis
+# on simulations that have completed.
 @Project.operation(f'check')
 @Project.post(lambda j: j.isfile("system.gro"))
 @flow.with_job

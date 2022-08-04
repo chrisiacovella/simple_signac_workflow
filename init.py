@@ -1,12 +1,11 @@
 """ init.py :: Initialize the signac dataspace.
     ------
     This is a simple example to demonstrate the use of
-    Signac to perform a simulation using GROMACS.
-    This example will perform a simulations at various
-    thermodynamics statepoints for a system of bulk hexane.
-    We will not use mbuild/foyer directly in this example,
-    instead the associated .gro and .top files have
-    already been created to simplify the scripts.
+    MoSDeF and Signac to perform a simulation using GROMACS.
+    This file defines the dataspace that will be considered.
+    Note, each job in the dataspace will have the same
+    thermodynamic inputs, but will be initialized
+    with different length alkanes.
     -------
 """
 import itertools
@@ -21,13 +20,18 @@ pr = signac.init_project('alkane_screen')
 
 # Define the design space:
 # In this case, we will set our design space to be
-# the chemical structure, where we increase alkane length
+# the chemical structure, where we increase alkane length.
+# For convenience, since are only considering
+# short, linear alkaneswe will define the
+# molecule dataspace using the SMILES strings.
 
-molecule_strings = ['C', 'CC']
+molecule_strings = ['C', 'CC', 'CCC']
 
 # Define statepoint information:
-# We of course could move any of these variables into the
-# design space so we can loop over, e.g., temperature
+# We could move any of these variables into the
+# design space so we could consider
+# e.g., the behavior as a function of temperature
+# in addition to molecule structure.
 
 n_molecules = 100
 temperature = 300* u.K
