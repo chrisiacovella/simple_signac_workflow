@@ -7,4 +7,4 @@ This repository provides a simple example of using MoSDeF and Signac/Signac-flow
 
 [project.py](project.py): A simple demonstration of using signac-flow to encode a workflow for setting up and performing GROMACS simulations using mBuild and Foyer. 
 
-[analysis.py](analysis.py): A very simple framework to demonstrate how to load in your signac project, read in statepoint information, and  to locate the data for each job that would allow you to perform analysis over the dataspace.
+[analyze.py](analyze.py): A very simple framework to demonstrate how to load in your signac project, read in statepoint information, and  to locate the data for each job that would allow you to perform analysis over the dataspace.
