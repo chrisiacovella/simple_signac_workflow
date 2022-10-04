@@ -50,6 +50,20 @@ Submit the grommp and mdrun commands to the compute nodes, selecting the partiti
 ``` 
 python project.py submit -o run --gres=gpu:V100:2 --partition=short-tesla --ntasks=8
 ```
+
+The options for each flag are shown below.  Note these are included in the Rahman class in project.py.  
+
+```
+--gres: [ 'gpu:GTX980:2', 'gpu:A100:2', 'gpu:V100:2', 
+          'gpu:GTX980:1', 'gpu:A100:1', 'gpu:V100:1']
+--partition: [ 'short-std', 'short-tesla', 
+               'day-long-std', 'day-long-tesla', 
+               'week-long-std', 'week-long-tesla', 
+               'month-long-std', 'month-long-tesla']
+--ntasks: ['1', '2', '4', '8', '16']
+
+```
+
 Check on the status of the jobs.
 ```
 python project.py exec check
