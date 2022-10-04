@@ -21,27 +21,58 @@ class Project(flow.FlowProject):
         current_path = pathlib.Path(os.getcwd()).absolute()
 
 # To run on a cluster, you may need to define a template for the scheduler
-# For example, below is what I would use on my local group cluster.
-# It is currently commented out as it won't be used in this example.
-"""
-from flow.environment import DefaultTorqueEnvironment
-class Rahman(DefaultTorqueEnvironment):
-    # Subclass of DefaultPBSEnvironment for VU's Rahman cluster.
-    # PBS templates are stored in a "templates" folder in your project
+from flow.environment import DefaultSlurmEnvironment
+class Rahman(DefaultSlurmEnvironment):
+    # Subclass of DefaultSlurmEnvironment for VU's Rahman cluster.
+    # The Slurm template are stored in a "templates" folder in the project
     # directory.
     template = "rahman_gmx.sh"
-    
+    hostname_pattern = "head.cl.vanderbilt.edu"
+
     @classmethod
     def add_args(cls, parser):
         # Add command line arguments to the submit call.
         parser.add_argument(
-                            "--walltime",
-                            type=float,
-                            default=96,
-                            help="Walltime for this submission",
+                            "--gres",
+                            choices=[
+                                'gpu:GTX980:2',
+                                'gpu:A100:2',
+                                'gpu:V100:2',
+                                'gpu:GTX980:1',
+                                'gpu:A100:1',
+                                'gpu:V100:1',
+                            ],
+                            default='gpu:GTX980:2',
+                            help="which type of gpu",
+                            )
+        parser.add_argument(
+                            "--partition",
+                            choices=[
+                                'short-std',
+                                'short-tesla',
+                                'day-long-std',
+                                'day-long-tesla',
+                                'week-long-std',
+                                'week-long-tesla',
+                                'month-long-std',
+                                'month-long-tesla',
+                            ],
+                            default='short-std',
+                            help="which queue to run",
+                            )
+        parser.add_argument(
+                            "--ntasks",
+                            choices=[
+                                '1',
+                                '2',
+                                '4',
+                                '8',
+                                '16',
+                            ],
+                            default='16',
+                            help="number of cores",
                             )
 
-"""
 
 # This function will read in jinja template, replace variables, and write out the new file
 # This is not called directly in the signac project, but called by the init function
@@ -161,11 +192,13 @@ def init_job(job):
 @flow.with_job
 @flow.cmd
 def run_job(job):
+    
+    module_to_load =f"module load gromacs/2020.6"
 
     grompp = "gmx grompp -f system_input.mdp -o system_input.tpr -c system_input.gro -p system_input.top --maxwarn 2"
     mdrun ="gmx mdrun -v -deffnm system -s system_input.tpr -cpi system.cpt -nt 16"
     
-    msg = f"{grompp} && {mdrun}"
+    msg = f"{module_to_load} && {grompp} && {mdrun}"
     print(msg)
     return(msg)
     
