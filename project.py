@@ -192,11 +192,13 @@ def init_job(job):
 @flow.with_job
 @flow.cmd
 def run_job(job):
+    
+    module_to_load =f"module load gromacs/2020.6"
 
     grompp = "gmx grompp -f system_input.mdp -o system_input.tpr -c system_input.gro -p system_input.top --maxwarn 2"
     mdrun ="gmx mdrun -v -deffnm system -s system_input.tpr -cpi system.cpt -nt 16"
     
-    msg = f"{grompp} && {mdrun}"
+    msg = f"{module_to_load} && {grompp} && {mdrun}"
     print(msg)
     return(msg)
     
