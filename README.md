@@ -1,6 +1,6 @@
-# simple_signac_workflow
+# simple signac workflow
 
-This repository provides a simple example of using MoSDeF and Signac/Signac-flow with GROMACS. 
+This repository provides a simple example of using [MoSDeF](https://github.com/mosdef-hub) and [Signac/Signac-flow](https://docs.signac.io/en/latest/index.html) with GROMACS. 
 
 Note, if you want a version that does not include support for the SLURM queuing system  on Rahman, check out the [Basic release](https://github.com/chrisiacovella/simple_signac_workflow/tree/Basic).  
 
