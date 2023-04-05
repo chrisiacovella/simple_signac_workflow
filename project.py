@@ -21,13 +21,7 @@ def santize_path(temp_string):
     temp_string = temp_string.replace(')', '\)')
 
 class Project(FlowProject):
-    """Subclass of FlowProject to provide custom methods and attributes."""
-   
-    def __init__(self):
-        super().__init__()
-        current_path = pathlib.Path(os.getcwd()).absolute()
-        current_path = santize_path(current_path)
-      
+    pass
 
 # To run on a cluster, you may need to define a template for the scheduler
 from flow.environment import DefaultSlurmEnvironment
@@ -158,7 +152,7 @@ def init_job(job):
     velocity_seed = job.sp.velocity_seed
     
     # aggregate info into a simple dictionary
-    mdp_abs_path = project_root + '/engine_input/gromacs/mdp'
+    mdp_abs_path = f'{project_root}/engine_input/gromacs/mdp'
     mdp = {
         "fname": "system_input.mdp",
         "template": f"{mdp_abs_path}/system.mdp.jinja",
@@ -220,4 +214,5 @@ def check_job(job):
 
 
 if __name__ == "__main__":
-    Project(path='.').main()
+    pr = Project(path='.')
+    pr.main()
