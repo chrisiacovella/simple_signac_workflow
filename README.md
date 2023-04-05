@@ -1,6 +1,6 @@
 # simple signac workflow
 
-This repository provides a simple example of using [MoSDeF](https://github.com/mosdef-hub) and [Signac/Signac-flow](https://docs.signac.io/en/latest/index.html) with GROMACS. 
+This repository provides a simple example of using [MoSDeF](https://github.com/mosdef-hub) and [Signac/Signac-flow](https://docs.signac.io/en/latest/index.html) with GROMACS.  Note this was updated to work with the syntax changes for deecorators that came with 0.23 in signac-flow.
 
 Note, if you want a version that does not include support for the SLURM queuing system  on Rahman, check out the [Basic release](https://github.com/chrisiacovella/simple_signac_workflow/tree/Basic).  
 
@@ -18,9 +18,7 @@ conda create --name simple_signac_gmx
 
 conda activate simple_signac_gmx
 
-conda install -c conda-forge signac signac-flow
-conda install -c conda-forge mbuild
-conda install -c conda-forge foyer
+conda install -c conda-forge mbuild foyer rdkit signac signac-flow
 ```
 
 or create using the environment.yml file (note I include specific versions in the environment file that were used to test the framework):
