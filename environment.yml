@@ -4,7 +4,8 @@ channels:
   - defaults
 
 dependencies:
-  - signac=1.7.0
-  - signac-flow=0.21.0
-  - mbuild=0.15.1
-  - foyer=0.11.3
+  - signac>=2.0.0
+  - signac-flow>=0.25.0
+  - mbuild>=0.15.1
+  - foyer>=0.11.3
+  - rdkit
