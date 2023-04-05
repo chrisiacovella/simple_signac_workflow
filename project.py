@@ -142,7 +142,7 @@ def init_job(job):
     compound_system = mb.fill_box(compound, n_compounds=n_molecules, box=box)
     
     # atomtype and save the input files to GROMACS format
-    compound_system.save(f"system_input.top", forcefield_files=f"{project_root}/xml_files/oplsaa_alkanes.xml", overwrite=True)
+    compound_system.save(f"system_input.top", forcefield_files=f"{project_root}/../xml_files/oplsaa_alkanes.xml", overwrite=True)
     compound_system.save(f"system_input.gro", overwrite=True)
 
     
@@ -152,7 +152,7 @@ def init_job(job):
     velocity_seed = job.sp.velocity_seed
     
     # aggregate info into a simple dictionary
-    mdp_abs_path = f'{project_root}/engine_input/gromacs/mdp'
+    mdp_abs_path = f'{project_root}/../engine_input/gromacs/mdp'
     mdp = {
         "fname": "system_input.mdp",
         "template": f"{mdp_abs_path}/system.mdp.jinja",
@@ -214,5 +214,5 @@ def check_job(job):
 
 
 if __name__ == "__main__":
-    pr = Project(path='.')
+    pr = Project(path='alkane_screen')
     pr.main()
