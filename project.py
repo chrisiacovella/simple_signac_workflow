@@ -2,7 +2,7 @@ import signac
 import os
 import pathlib
 import sys
-import flow
+from flow import FlowProject
 import unyt as u
 
 import foyer
@@ -13,19 +13,18 @@ import mbuild as mb
 from engine_input.gromacs import mdp
 
 
-class Project(flow.FlowProject):
-    """Subclass of FlowProject to provide custom methods and attributes."""
-    
-    def __init__(self):
-        super().__init__()
-        current_path = pathlib.Path(os.getcwd()).absolute()
+class Project(FlowProject):
+    pass
 
 # To run on a cluster, you may need to define a template for the scheduler
 from flow.environment import DefaultSlurmEnvironment
 class Rahman(DefaultSlurmEnvironment):
     # Subclass of DefaultSlurmEnvironment for VU's Rahman cluster.
     # The Slurm template are stored in a "templates" folder in the project
-    # directory.
+    # directory (i.e., the directory that contains the folder "workspace").
+    # If you give the project a name, you'll need to copy the templates folder
+    # into the directory that is created with that name after running init.
+    
     template = "rahman_gmx.sh"
     hostname_pattern = "head.cl.vanderbilt.edu"
 
@@ -118,19 +117,18 @@ def _setup_mdp(fname, template, data, overwrite=False):
 # and then generate the propopogate an .mdp file for GROMACS using
 # the thermodynamic variables defined in init.py
 # This operation is considered successful if we have generated the .top, .gro, and .mdp files.
-@Project.operation(f'init')
 @Project.post(lambda j: j.isfile("system_input.top"))
 @Project.post(lambda j: j.isfile("system_input.gro"))
 @Project.post(lambda j: j.isfile("system_input.mdp"))
-
-# The with_job decorator basically states that this function accepts
-# a single job as a parameter
-@flow.with_job
+@Project.operation(f'init', with_job=True)
 def init_job(job):
 
-    # get the root directory so that we can read in the appropriate force field file later
-    # and fetch the appropriate .mdp templates
-    project_root = Project().root_directory()
+    # Get the path to the root directory of the project so that we can read in the
+    # appropriate force field file later and fetch the appropriate .mdp templates
+    # Since project.py (and all of our templates) are in the same directory containing
+    # the workspace, this path will put us in the correct location
+    
+    project_root = job.project
 
     # fetch the key information related to system structure parameterization
     molecule_string = job.sp.molecule_string
@@ -153,7 +151,7 @@ def init_job(job):
     velocity_seed = job.sp.velocity_seed
     
     # aggregate info into a simple dictionary
-    mdp_abs_path = Project().root_directory() + '/engine_input/gromacs/mdp'
+    mdp_abs_path = f'{project_root}/engine_input/gromacs/mdp'
     mdp = {
         "fname": "system_input.mdp",
         "template": f"{mdp_abs_path}/system.mdp.jinja",
@@ -186,11 +184,11 @@ def init_job(job):
 # This can be done by simply concatenating together the separate msg statements, before returning.
 # Although, caution should be taken when making a single really long string,
 # as it may overrun the shell can handle (e.g., getting an "Argument list too long" error)
+# Note that, since we want this to execute a set of commands (not just python operations)
+# we pass the argument "cmd=True"; the commands we wish to execute are returned as a string
 
-@Project.operation(f'run')
 @Project.post(lambda j: j.isfile(f"system.gro"))
-@flow.with_job
-@flow.cmd
+@Project.operation(f'run', cmd=True, with_job=True)
 def run_job(job):
     
     module_to_load =f"module load gromacs/2020.6"
@@ -200,14 +198,13 @@ def run_job(job):
     
     msg = f"{module_to_load} && {grompp} && {mdrun}"
     print(msg)
-    return(msg)
+    return msg
     
 # This is a simple function to check to see if the job has completed, writing to the job.doc.
 # This will be used in the analysis.py file to ensure that we are only performing analysis
 # on simulations that have completed.
-@Project.operation(f'check')
 @Project.post(lambda j: j.isfile("system.gro"))
-@flow.with_job
+@Project.operation(f'check')
 def check_job(job):
     molecule_string = job.sp.molecule_string
     if job.isfile(f"system.gro") == True:
@@ -218,5 +215,5 @@ def check_job(job):
 
 
 if __name__ == "__main__":
-    pr = Project()
+    pr = Project(path='.')
     pr.main()

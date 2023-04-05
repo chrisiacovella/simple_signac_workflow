@@ -7,15 +7,9 @@
     simulations and shows how to locate your data for analysis.
     -------
 """
-import itertools
-import os
-
-import numpy as np
 import signac
-import unyt as u
 
-
-project_local = signac.get_project('alkane_screen')
+project_local = signac.get_project()
 
 for job in project_local:
     molecule_string = job.sp.molecule_string
@@ -23,5 +17,5 @@ for job in project_local:
         print(f"{molecule_string} : completed")
         # can easily fetch the job_path to be able to access
         # and analyze your data
-        job_path = job.workspace()
+        job_path = job.path
         print(job_path)
