@@ -12,13 +12,6 @@ import mbuild as mb
 # Template mdp files are stored in engine_input/gromacs/mdp.
 from engine_input.gromacs import mdp
 
-def santize_path(temp_string):
-    # on my machine, dropbox integration ends up with my path have spaces and parenthesis
-    #make sure we were passed a string
-    temp_string = str(temp_string)
-    temp_string = temp_string.replace(' ', '\ ')
-    temp_string = temp_string.replace('(', '\(')
-    temp_string = temp_string.replace(')', '\)')
 
 class Project(FlowProject):
     pass
@@ -28,7 +21,10 @@ from flow.environment import DefaultSlurmEnvironment
 class Rahman(DefaultSlurmEnvironment):
     # Subclass of DefaultSlurmEnvironment for VU's Rahman cluster.
     # The Slurm template are stored in a "templates" folder in the project
-    # directory.
+    # directory (i.e., the directory that contains the folder "workspace").
+    # If you give the project a name, you'll need to copy the templates folder
+    # into the directory that is created with that name after running init.
+    
     template = "rahman_gmx.sh"
     hostname_pattern = "head.cl.vanderbilt.edu"
 
@@ -127,8 +123,11 @@ def _setup_mdp(fname, template, data, overwrite=False):
 @Project.operation(f'init', with_job=True)
 def init_job(job):
 
-    # get the root directory so that we can read in the appropriate force field file later
-    # and fetch the appropriate .mdp templates
+    # Get the path to the root directory of the project so that we can read in the
+    # appropriate force field file later and fetch the appropriate .mdp templates
+    # Since project.py (and all of our templates) are in the same directory containing
+    # the workspace, this path will put us in the correct location
+    
     project_root = job.project
 
     # fetch the key information related to system structure parameterization
@@ -185,6 +184,8 @@ def init_job(job):
 # This can be done by simply concatenating together the separate msg statements, before returning.
 # Although, caution should be taken when making a single really long string,
 # as it may overrun the shell can handle (e.g., getting an "Argument list too long" error)
+# Note that, since we want this to execute a set of commands (not just python operations)
+# we pass the argument "cmd=True"; the commands we wish to execute are returned as a string
 
 @Project.post(lambda j: j.isfile(f"system.gro"))
 @Project.operation(f'run', cmd=True, with_job=True)
@@ -197,7 +198,7 @@ def run_job(job):
     
     msg = f"{module_to_load} && {grompp} && {mdrun}"
     print(msg)
-    return(msg)
+    return msg
     
 # This is a simple function to check to see if the job has completed, writing to the job.doc.
 # This will be used in the analysis.py file to ensure that we are only performing analysis

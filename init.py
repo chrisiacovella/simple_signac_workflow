@@ -16,7 +16,7 @@ import signac
 import unyt as u
 
 # Define a new project
-pr = signac.init_project('alkane_screen')
+pr = signac.init_project()
 
 # Define the design space:
 # In this case, we will set our design space to be
