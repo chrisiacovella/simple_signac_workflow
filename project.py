@@ -130,12 +130,12 @@ def _setup_mdp(fname, template, data, overwrite=False):
 @Project.post(lambda j: j.isfile("system_input.top"))
 @Project.post(lambda j: j.isfile("system_input.gro"))
 @Project.post(lambda j: j.isfile("system_input.mdp"))
-@Project.operation(f'init')
+@Project.operation(f'init', with_job=True)
 def init_job(job):
 
     # get the root directory so that we can read in the appropriate force field file later
     # and fetch the appropriate .mdp templates
-    project_root = santize_path(Project().path)
+    project_root = job.project
 
     # fetch the key information related to system structure parameterization
     molecule_string = job.sp.molecule_string
@@ -158,7 +158,7 @@ def init_job(job):
     velocity_seed = job.sp.velocity_seed
     
     # aggregate info into a simple dictionary
-    mdp_abs_path = santize_path(Project().path) + '/engine_input/gromacs/mdp'
+    mdp_abs_path = project_root + '/engine_input/gromacs/mdp'
     mdp = {
         "fname": "system_input.mdp",
         "template": f"{mdp_abs_path}/system.mdp.jinja",
@@ -193,7 +193,7 @@ def init_job(job):
 # as it may overrun the shell can handle (e.g., getting an "Argument list too long" error)
 
 @Project.post(lambda j: j.isfile(f"system.gro"))
-@Project.operation(f'run', cmd=True)
+@Project.operation(f'run', cmd=True, with_job=True)
 def run_job(job):
     
     module_to_load =f"module load gromacs/2020.6"
@@ -220,4 +220,4 @@ def check_job(job):
 
 
 if __name__ == "__main__":
-    Project().main()
+    Project(path='.').main()
