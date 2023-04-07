@@ -1,10 +1,8 @@
 # simple signac workflow
 
-This repository provides a simple example of using [MoSDeF](https://github.com/mosdef-hub) and [Signac/Signac-flow](https://docs.signac.io/en/latest/index.html) with GROMACS.  Note this was updated to work with the syntax changes for deecorators that came with 0.23 in signac-flow.
+This repository provides a simple example of using [MoSDeF](https://github.com/mosdef-hub) and [Signac/Signac-flow](https://docs.signac.io/en/latest/index.html) with GROMACS.  Note this was updated to work with the syntax changes for decorators that came with [0.23 in signac-flow](https://docs.signac.io/projects/flow/en/latest/changes.html#id12).
 
-Note, if you want a version that does not include support for the SLURM queuing system  on Rahman, check out the [Basic release](https://github.com/chrisiacovella/simple_signac_workflow/tree/Basic).  
-
-The main branch includes support for slurm on Rahman. To use this code on Rahman, you'll need to load the Anaconda module first.  Note, selection of the appropriate gromacs module (in this case 2020.6) is set in the run function in the project.py file. 
+The main branch includes support for slurm on Rahman. To use this code on Rahman, you'll need to load the Anaconda module first.  Note, selection of the appropriate GROMACS module (in this case 2020.6) is set in the run function in the project.py file. 
 
 
 ```
@@ -31,15 +29,15 @@ conda activate simple_signac_gmx
 
 General usage below:
 
-[init.py](init.py): Defines the thermodynamic conditions and initializes the signac workspace.  In this example, each job has the same thermodynamic conditions, but the system is composed of different length alkanes. Current project generates systems of methane (C), ethane (CC), and propane (CCC):
+[init.py](init.py): Defines the thermodynamic conditions and initializes the signac workspace.  In this example, each job has the same thermodynamic conditions, but the system is composed of different length alkanes. The current project generates systems of methane (C), ethane (CC), and propane (CCC):
 
 ```
 python init.py
 ```
 
-[project.py](project.py): A simple demonstration of using signac-flow to encode a workflow for setting up and performing GROMACS simulations using mBuild and Foyer. Usage (execute each in series)
+[project.py](project.py): A simple demonstration of using signac-flow to encode a workflow for setting up and performing GROMACS simulations using mBuild and Foyer. Usage (execute each in series):
 
-Initialize and parameterize the system, generating  files need to run gromacs:
+Initialize and parameterize the system, generating files needed to run gromacs:
 ```
 python project.py exec init 
 ```
@@ -67,7 +65,7 @@ Check on the status of the jobs.
 python project.py exec check
 ```
 
-[analyze.py](analyze.py): A very simple framework to demonstrate how to load in your signac project, read in statepoint information, and  to locate the data for each job that would allow you to perform analysis over the dataspace. No analysis is actually performed here, this is just a simple framework to demonstrate how to access the project info
+[analyze.py](analyze.py): A very simple framework to demonstrate how to load in your signac project, read in statepoint information, and locate the data for each job that would allow you to perform analysis over the dataspace. No analysis is actually performed here, this is just a simple framework to demonstrate how to access the project info
 
 ```
 python analyze.py
